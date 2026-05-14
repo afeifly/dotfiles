@@ -5,7 +5,10 @@ set -e
 
 # If running as root, we must force Homebrew to allow it
 if [ "$EUID" -eq 0 ]; then
-    echo "⚠️  Running as root. Forcing Homebrew root mode..."
+    echo "⚠️  Running as root. Tricking Homebrew installer..."
+    # Homebrew installer skips the root check if it thinks it's in a Docker container
+    touch /.dockerenv
+    
     export HOMEBREW_ON_LINUX_FORCE_ROOT=1
     export NONINTERACTIVE=1
 fi
@@ -20,17 +23,21 @@ echo "OS Detected: $OS_TYPE"
 if ! command -v brew &> /dev/null; then
     if [[ "$OS_TYPE" == "Linux" ]]; then
         echo "📦 Installing Linux prerequisites..."
-        apt-get update && apt-get install -y build-essential curl file git sudo
+        # If we are root, we don't need sudo
+        apt-get update && apt-get install -y build-essential curl file git
     fi
 
     echo "🍺 Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     
     # Add brew to PATH for the current session
+    # Homebrew on Linux usually goes to /home/linuxbrew/.linuxbrew
     if [[ -d "/opt/homebrew/bin" ]]; then
         eval "$(/opt/homebrew/bin/brew shellenv)"
     elif [[ -d "/home/linuxbrew/.linuxbrew/bin" ]]; then
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    elif [[ -d "$HOME/.linuxbrew/bin" ]]; then
+        eval "$($HOME/.linuxbrew/bin/brew shellenv)"
     fi
 fi
 
@@ -76,6 +83,13 @@ stow zsh tmux vim nvim git
 
 # 7. Trigger Plugin Installations
 echo "✨ Finalizing plugins..."
+# Ensure nvim is in path for this session if it was just installed
+if ! command -v nvim &> /dev/null; then
+    if [[ -d "/home/linuxbrew/.linuxbrew/bin" ]]; then
+        export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
+    fi
+fi
+
 nvim --headless "+Lazy! sync" +qa
 "$HOME/.tmux/plugins/tpm/bin/install_plugins" || true
 
