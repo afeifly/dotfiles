@@ -3,27 +3,39 @@
 # Stop on any error
 set -e
 
+# If running as root, we must force Homebrew to allow it
+if [ "$EUID" -eq 0 ]; then
+    echo "⚠️  Running as root. Forcing Homebrew root mode..."
+    export HOMEBREW_ON_LINUX_FORCE_ROOT=1
+    export NONINTERACTIVE=1
+fi
+
 echo "🚀 Starting Dotfiles Installation..."
 
 # 1. Detect OS
 OS_TYPE="$(uname)"
 echo "OS Detected: $OS_TYPE"
 
-# 2. Install Homebrew if missing (The universal package manager)
+# 2. Install Homebrew if missing
 if ! command -v brew &> /dev/null; then
+    if [[ "$OS_TYPE" == "Linux" ]]; then
+        echo "📦 Installing Linux prerequisites..."
+        apt-get update && apt-get install -y build-essential curl file git sudo
+    fi
+
     echo "🍺 Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     
     # Add brew to PATH for the current session
-    if [[ "$OS_TYPE" == "Darwin" ]]; then
+    if [[ -d "/opt/homebrew/bin" ]]; then
         eval "$(/opt/homebrew/bin/brew shellenv)"
-    else
+    elif [[ -d "/home/linuxbrew/.linuxbrew/bin" ]]; then
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
     fi
 fi
 
 # 3. Install Core Packages
-echo "📦 Installing core packages via Homebrew..."
+echo "📦 Installing core packages..."
 brew install git stow neovim tmux ripgrep bat fzf zsh
 
 # 4. Prepare Oh My Zsh and Plugins
@@ -46,13 +58,12 @@ if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
 fi
 
 # 6. Use Stow to Symlink Configs
-echo "🔗 Linking dotfiles with GNU Stow..."
+echo "🔗 Linking dotfiles..."
 cd "$HOME/dotfiles"
 
-# Backup existing files to avoid stow conflicts
+# Backup existing files
 backup_if_exists() {
     if [ -f "$HOME/$1" ] && [ ! -L "$HOME/$1" ]; then
-        echo "⚠️  Backing up existing $1 to $1.bak"
         mv "$HOME/$1" "$HOME/$1.bak"
     fi
 }
@@ -63,15 +74,9 @@ backup_if_exists ".vimrc"
 
 stow zsh tmux vim nvim git
 
-# 7. Trigger Plugin Installations (Headless)
-echo "✨ Finalizing plugin installation..."
-
-# Neovim (Uses Lazy.nvim auto-bootstrap)
-echo "  - Syncing Neovim plugins..."
+# 7. Trigger Plugin Installations
+echo "✨ Finalizing plugins..."
 nvim --headless "+Lazy! sync" +qa
-
-# Tmux (Installs plugins defined in .tmux.conf)
-echo "  - Installing Tmux plugins..."
 "$HOME/.tmux/plugins/tpm/bin/install_plugins" || true
 
-echo "✅ ALL DONE! Please restart your terminal or run: source ~/.zshrc"
+echo "✅ ALL DONE! Run: source ~/.zshrc"
