@@ -12,26 +12,28 @@ echo "OS Detected: $OS_TYPE"
 # 2. Install Core Packages
 if [[ "$OS_TYPE" == "Linux" ]]; then
     echo "📦 Using apt-get to install packages..."
-    # Check if we need sudo
     SUDO=""
-    if [ "$EUID" -ne 0 ]; then
-        SUDO="sudo"
-    fi
+    [ "$EUID" -ne 0 ] && SUDO="sudo"
     
     $SUDO apt-get update
-    $SUDO apt-get install -y git stow neovim tmux ripgrep bat fzf zsh curl
+    $SUDO apt-get install -y git stow tmux ripgrep bat fzf zsh curl software-properties-common
 
-    # Ubuntu specific: symlink 'batcat' to 'bat' if it exists
+    # Fix: Ubuntu's default neovim is often too old. Use the PPA for >= 0.9.0
+    echo "💾 Adding Neovim PPA for latest version..."
+    $SUDO add-apt-repository -y ppa:neovim-ppa/stable
+    $SUDO apt-get update
+    $SUDO apt-get install -y neovim
+
+    # Ubuntu specific: symlink 'batcat' to 'bat'
     if command -v batcat &> /dev/null && ! command -v bat &> /dev/null; then
         echo "🔗 Symlinking batcat to bat..."
         mkdir -p "$HOME/.local/bin"
-        ln -sf /usr/bin/batcat "$HOME/.local/bin/bat"
+        $SUDO ln -sf /usr/bin/batcat /usr/local/bin/bat || ln -sf /usr/bin/batcat "$HOME/.local/bin/bat"
     fi
 
 elif [[ "$OS_TYPE" == "Darwin" ]]; then
     echo "📦 Using Homebrew to install packages..."
     if ! command -v brew &> /dev/null; then
-        echo "🍺 Installing Homebrew..."
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         eval "$(/opt/homebrew/bin/brew shellenv)"
     fi
@@ -63,6 +65,7 @@ cd "$HOME/dotfiles"
 
 backup_if_exists() {
     if [ -f "$HOME/$1" ] && [ ! -L "$HOME/$1" ]; then
+        echo "⚠️  Backing up $1"
         mv "$HOME/$1" "$HOME/$1.bak"
     fi
 }
@@ -71,15 +74,21 @@ backup_if_exists ".zshrc"
 backup_if_exists ".tmux.conf"
 backup_if_exists ".vimrc"
 
-stow zsh tmux vim nvim git
+# Force stow to overwrite or ignore conflicts if they are already symlinks
+stow --adopt zsh tmux vim nvim git
+git restore . # Undo the 'adopt' changes to keep dotfiles repo clean
 
 # 6. Trigger Plugin Installations
 echo "✨ Finalizing plugins..."
-# Force path for nvim if we just installed it to .local/bin or via apt
-export PATH="$HOME/.local/bin:$PATH"
 
-# Run nvim sync and tmux install
+# Neovim: Sync plugins
+echo "  - Syncing Neovim..."
 nvim --headless "+Lazy! sync" +qa
+
+# Tmux: Install plugins
+# We explicitly source the config to make sure TPM sees it
+echo "  - Installing Tmux plugins..."
+export TMUX_PLUGIN_MANAGER_PATH="$HOME/.tmux/plugins"
 "$HOME/.tmux/plugins/tpm/bin/install_plugins" || true
 
 echo "✅ ALL DONE! Run: source ~/.zshrc"
