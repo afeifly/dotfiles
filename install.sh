@@ -16,19 +16,22 @@ if [[ "$OS_TYPE" == "Linux" ]]; then
     [ "$EUID" -ne 0 ] && SUDO="sudo"
     
     $SUDO apt-get update
-    $SUDO apt-get install -y git stow tmux ripgrep bat fzf zsh curl software-properties-common
+    $SUDO apt-get install -y git stow tmux ripgrep bat fzf zsh curl wget
 
-    # Fix: Ubuntu's default neovim is often too old. Use the PPA for >= 0.9.0
-    echo "💾 Adding Neovim PPA for latest version..."
-    $SUDO add-apt-repository -y ppa:neovim-ppa/stable
-    $SUDO apt-get update
-    $SUDO apt-get install -y neovim
+    # Fix: Use AppImage for Neovim to guarantee version >= 0.10
+    if ! command -v nvim &> /dev/null || [[ "$(nvim --version | head -n1 | grep -oE '[0-9]+\.[0-9]+' | head -n1)" < "0.9" ]]; then
+        echo "💾 Downloading Neovim AppImage (stable)..."
+        mkdir -p "$HOME/.local/bin"
+        wget -q https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage -O "$HOME/.local/bin/nvim"
+        chmod +x "$HOME/.local/bin/nvim"
+        export PATH="$HOME/.local/bin:$PATH"
+    fi
 
     # Ubuntu specific: symlink 'batcat' to 'bat'
     if command -v batcat &> /dev/null && ! command -v bat &> /dev/null; then
         echo "🔗 Symlinking batcat to bat..."
         mkdir -p "$HOME/.local/bin"
-        $SUDO ln -sf /usr/bin/batcat /usr/local/bin/bat || ln -sf /usr/bin/batcat "$HOME/.local/bin/bat"
+        ln -sf /usr/bin/batcat "$HOME/.local/bin/bat" || true
     fi
 
 elif [[ "$OS_TYPE" == "Darwin" ]]; then
@@ -63,32 +66,36 @@ fi
 echo "🔗 Linking dotfiles..."
 cd "$HOME/dotfiles"
 
+# Ensure target directories exist before stowing
+mkdir -p "$HOME/.config/nvim"
+mkdir -p "$HOME/.config/git"
+
+# Backup existing files
 backup_if_exists() {
     if [ -f "$HOME/$1" ] && [ ! -L "$HOME/$1" ]; then
-        echo "⚠️  Backing up $1"
         mv "$HOME/$1" "$HOME/$1.bak"
     fi
 }
-
 backup_if_exists ".zshrc"
 backup_if_exists ".tmux.conf"
 backup_if_exists ".vimrc"
 
-# Force stow to overwrite or ignore conflicts if they are already symlinks
-stow --adopt zsh tmux vim nvim git
-git restore . # Undo the 'adopt' changes to keep dotfiles repo clean
+# Restow (D = delete old links, R = restow)
+stow -R zsh tmux vim nvim git
 
 # 6. Trigger Plugin Installations
 echo "✨ Finalizing plugins..."
+export PATH="$HOME/.local/bin:$PATH"
 
 # Neovim: Sync plugins
 echo "  - Syncing Neovim..."
 nvim --headless "+Lazy! sync" +qa
 
 # Tmux: Install plugins
-# We explicitly source the config to make sure TPM sees it
 echo "  - Installing Tmux plugins..."
-export TMUX_PLUGIN_MANAGER_PATH="$HOME/.tmux/plugins"
-"$HOME/.tmux/plugins/tpm/bin/install_plugins" || true
+# Force TPM to load our newly linked config
+TMUX_CONF="$HOME/.tmux.conf"
+[ -L "$TMUX_CONF" ] || TMUX_CONF="$HOME/dotfiles/tmux/.tmux.conf"
+bash "$HOME/.tmux/plugins/tpm/bin/install_plugins" || true
 
 echo "✅ ALL DONE! Run: source ~/.zshrc"
