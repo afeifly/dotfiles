@@ -98,12 +98,19 @@ nvim --headless "+Lazy! sync" +qa
 
 # Tmux: Install plugins
 echo "  - Installing Tmux plugins..."
-# Set path for TPM
-export TMUX_PLUGIN_MANAGER_PATH="$HOME/.tmux/plugins/"
-# Ensure the install script exists before running
 if [ -f "$HOME/.tmux/plugins/tpm/bin/install_plugins" ]; then
-    # Explicitly pass the config file to the installer
-    bash "$HOME/.tmux/plugins/tpm/bin/install_plugins" "$HOME/.tmux.conf" || true
+    export TMUX_PLUGIN_MANAGER_PATH="$HOME/.tmux/plugins"
+    
+    # 1. Start a temporary tmux server in the background
+    tmux start-server
+    # 2. Create a dummy session so tmux stays alive
+    tmux new-session -d -s "temp_install"
+    # 3. Explicitly source the new config
+    tmux source-file "$HOME/.tmux.conf"
+    # 4. Now run the installer
+    "$HOME/.tmux/plugins/tpm/bin/install_plugins" || true
+    # 5. Clean up
+    tmux kill-session -t "temp_install"
 else
     echo "⚠️  TPM not found, skipping plugin installation."
 fi
