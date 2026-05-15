@@ -128,7 +128,8 @@ echo "  - Installing Tmux plugins..."
 export TMUX_PLUGIN_MANAGER_PATH="$HOME/.tmux/plugins/"
 # Ensure the install script exists before running
 if [ -f "$HOME/.tmux/plugins/tpm/bin/install_plugins" ]; then
-    bash "$HOME/.tmux/plugins/tpm/bin/install_plugins" || true
+    # Explicitly pass the config file to the installer
+    bash "$HOME/.tmux/plugins/tpm/bin/install_plugins" "$HOME/.tmux.conf" || true
 else
     echo "⚠️  TPM not found, skipping plugin installation."
 fi
