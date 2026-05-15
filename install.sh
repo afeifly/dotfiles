@@ -92,6 +92,12 @@ mkdir -p "$HOME/.local/share"
 rm -rf "$HOME/.local/share/lazyvim"
 ln -sf "$HOME/.local/share/nvim" "$HOME/.local/share/lazyvim"
 
+# Link state and cache directories to avoid stale data bugs
+rm -rf "$HOME/.local/state/lazyvim"
+ln -sf "$HOME/.local/state/nvim" "$HOME/.local/state/lazyvim"
+rm -rf "$HOME/.cache/lazyvim"
+ln -sf "$HOME/.cache/nvim" "$HOME/.cache/lazyvim"
+
 # 6. Trigger Plugin Installations
 echo "✨ Finalizing plugins..."
 export PATH="$HOME/.local/bin:$PATH"
