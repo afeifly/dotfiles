@@ -85,8 +85,12 @@ mkdir -p "$HOME/.config"
 # Restow (R = restow)
 stow -R zsh tmux vim nvim git
 
-# Create a symlink for lazyvim appname support
+# Create symlinks for lazyvim appname support (config and data)
 ln -sf "$HOME/.config/nvim" "$HOME/.config/lazyvim"
+mkdir -p "$HOME/.local/share"
+# Link data directory so lazyvim finds the same plugins
+rm -rf "$HOME/.local/share/lazyvim"
+ln -sf "$HOME/.local/share/nvim" "$HOME/.local/share/lazyvim"
 
 # 6. Trigger Plugin Installations
 echo "✨ Finalizing plugins..."
@@ -94,7 +98,8 @@ export PATH="$HOME/.local/bin:$PATH"
 
 # Neovim: Sync plugins
 echo "  - Syncing Neovim..."
-nvim --headless "+Lazy! sync" +qa
+# Use NVIM_APPNAME to match your 'vi' alias
+NVIM_APPNAME=lazyvim nvim --headless "+Lazy! sync" +qa || true
 
 # Tmux: Install plugins
 echo "  - Installing Tmux plugins..."
