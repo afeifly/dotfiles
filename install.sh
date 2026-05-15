@@ -16,10 +16,10 @@ if [[ "$OS_TYPE" == "Linux" ]]; then
     [ "$EUID" -ne 0 ] && SUDO="sudo"
     
     $SUDO apt-get update
-    $SUDO apt-get install -y git stow tmux ripgrep bat fzf zsh curl wget libnotify-bin
+    $SUDO apt-get install -y git stow tmux ripgrep bat fzf zsh curl wget libnotify-bin vim
 
     # Fix: Use AppImage for Neovim to guarantee version >= 0.10
-    if ! command -v nvim &> /dev/null || [[ "$(nvim --version | head -n1 | grep -oE '[0-9]+\.[0-9]+' | head -n1)" < "0.9" ]]; then
+    if ! command -v nvim &> /dev/null || [[ "$(nvim --version | head -n1 | grep -oE '[0-9]+\.[0-9]+' | head -n1)" < "0.10" ]]; then
         echo "💾 Downloading Neovim AppImage (stable)..."
         mkdir -p "$HOME/.local/bin"
         # Using curl with progress bar and following redirects
@@ -42,7 +42,8 @@ elif [[ "$OS_TYPE" == "Darwin" ]]; then
         eval "$(/opt/homebrew/bin/brew shellenv)"
     fi
     # Install core tools + dependencies for 'work' function
-    brew install git stow neovim tmux ripgrep bat fzf zsh terminal-notifier caarlos0/tap/timer
+    brew install git stow neovim vim tmux ripgrep bat fzf zsh terminal-notifier caarlos0/tap/timer
+    brew upgrade neovim vim || true
 fi
 
 # 3. Additional CLI Tools (Cross-Platform)
@@ -98,6 +99,7 @@ cd "$HOME/dotfiles"
 # Remove existing files/directories to avoid stow conflicts
 echo "  - Removing existing configs to avoid conflicts..."
 rm -rf "$HOME/.config/nvim"
+rm -rf "$HOME/.config/lazyvim"
 rm -rf "$HOME/.config/git"
 rm -f "$HOME/.zshrc" "$HOME/.zprofile" "$HOME/.fzf.zsh"
 rm -f "$HOME/.tmux.conf"
@@ -108,6 +110,9 @@ mkdir -p "$HOME/.config"
 
 # Restow (R = restow)
 stow -R zsh tmux vim nvim git
+
+# Create a symlink for lazyvim appname support
+ln -sf "$HOME/.config/nvim" "$HOME/.config/lazyvim"
 
 # 6. Trigger Plugin Installations
 echo "✨ Finalizing plugins..."

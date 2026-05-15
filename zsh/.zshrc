@@ -43,6 +43,8 @@ export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform
 
 # 5. Aliases & Functions
 alias cl="clear"
+alias vi="NVIM_APPNAME=lazyvim nvim"
+alias vim="vim"
 alias lvim="NVIM_APPNAME=lazyvim nvim"
 alias python='python3'
 work() {
@@ -75,7 +77,8 @@ fif() {
 
 # 7. ZSH Theme & Plugins
 ZSH_THEME="ys"
-plugins=(git wd docker docker-compose zsh-vi-mode zsh-autosuggestions zsh-syntax-highlighting)
+
+plugins=(git wd docker docker-compose zsh-autosuggestions zsh-syntax-highlighting zsh-vi-mode)
 source $ZSH/oh-my-zsh.sh
 
 # 8. SDKMAN (Standard location)

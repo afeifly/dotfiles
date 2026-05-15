@@ -1,5 +1,8 @@
 set clipboard=unnamed
 
+" Map jk to Escape in insert mode
+inoremap jk <Esc>
+
 " --- Seamless Tmux-Vim Navigation ---
 function! TmuxMove(direction)
     let l:winnr = winnr()
