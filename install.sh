@@ -16,7 +16,7 @@ if [[ "$OS_TYPE" == "Linux" ]]; then
     [ "$EUID" -ne 0 ] && SUDO="sudo"
     
     $SUDO apt-get update
-    $SUDO apt-get install -y git stow tmux ripgrep bat fzf zsh curl wget libnotify-bin vim bc
+    $SUDO apt-get install -y git stow tmux ripgrep bat fzf zsh curl wget vim bc
 
     # Fix: Use AppImage for Neovim to guarantee version >= 0.10
     if ! command -v nvim &> /dev/null || [[ "$(nvim --version | head -n1 | grep -oE '[0-9]+\.[0-9]+' | head -n1)" < "0.10" ]]; then
@@ -47,32 +47,6 @@ elif [[ "$OS_TYPE" == "Darwin" ]]; then
 fi
 
 # 3. Additional CLI Tools (Cross-Platform)
-if [[ "$OS_TYPE" == "Linux" ]]; then
-    # Install 'timer' for Linux if not present
-    if ! command -v timer &> /dev/null; then
-        echo "⏳ Installing timer (CLI)..."
-        TIMER_VERSION="1.4.6"
-        ARCH=$(uname -m)
-        case "$ARCH" in
-            x86_64)  TIMER_ARCH="amd64" ;;
-            aarch64) TIMER_ARCH="arm64" ;;
-            *)       TIMER_ARCH="amd64" ;; # Default to amd64
-        esac
-        
-        # Download to a temporary file first to avoid corrupted pipe
-        TIMER_URL="https://github.com/caarlos0/timer/releases/download/v${TIMER_VERSION}/timer_${TIMER_VERSION}_linux_${TIMER_ARCH}.tar.gz"
-        if curl -L --fail --progress-bar "$TIMER_URL" -o "/tmp/timer.tar.gz"; then
-            tar -xzf "/tmp/timer.tar.gz" -C /tmp
-            mkdir -p "$HOME/.local/bin"
-            mv /tmp/timer "$HOME/.local/bin/timer"
-            chmod +x "$HOME/.local/bin/timer"
-            rm /tmp/timer.tar.gz
-        else
-            echo "❌ Failed to download timer. Please install manually from https://github.com/caarlos0/timer"
-        fi
-    fi
-fi
-
 # 4. Prepare Oh My Zsh and Plugins
 ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
 if [ ! -d "$HOME/.oh-my-zsh" ]; then

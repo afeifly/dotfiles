@@ -47,13 +47,12 @@ alias vi="NVIM_APPNAME=lazyvim nvim"
 alias vim="vim"
 alias lvim="NVIM_APPNAME=lazyvim nvim"
 alias python='python3'
-work() {
-  if [[ "$OSTYPE" == "darwin"* ]]; then
-    timer "${1:-25m}" && osascript -e "display notification \"Pomodoro\" with title \"Work Timer Up!\" sound name \"Crystal\""
-  else
-    timer "${1:-25m}" && notify-send "Work Timer Up!" "Pomodoro"
-  fi
-}
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  work() {
+    timer "${1:-25m}" && terminal-notifier -message 'Pomodoro' -title 'Work Timer Up!' -sound Crystal
+  }
+fi
 
 # Cross-platform 'code' command
 if [[ "$OSTYPE" == "darwin"* ]]; then
