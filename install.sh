@@ -16,7 +16,7 @@ if [[ "$OS_TYPE" == "Linux" ]]; then
     [ "$EUID" -ne 0 ] && SUDO="sudo"
     
     $SUDO apt-get update
-    $SUDO apt-get install -y git stow tmux ripgrep bat fzf zsh curl wget libnotify-bin vim
+    $SUDO apt-get install -y git stow tmux ripgrep bat fzf zsh curl wget libnotify-bin vim bc
 
     # Fix: Use AppImage for Neovim to guarantee version >= 0.10
     if ! command -v nvim &> /dev/null || [[ "$(nvim --version | head -n1 | grep -oE '[0-9]+\.[0-9]+' | head -n1)" < "0.10" ]]; then
@@ -124,9 +124,13 @@ nvim --headless "+Lazy! sync" +qa
 
 # Tmux: Install plugins
 echo "  - Installing Tmux plugins..."
-# Force TPM to load our newly linked config
-TMUX_CONF="$HOME/.tmux.conf"
-[ -L "$TMUX_CONF" ] || TMUX_CONF="$HOME/dotfiles/tmux/.tmux.conf"
-bash "$HOME/.tmux/plugins/tpm/bin/install_plugins" || true
+# Set path for TPM
+export TMUX_PLUGIN_MANAGER_PATH="$HOME/.tmux/plugins/"
+# Ensure the install script exists before running
+if [ -f "$HOME/.tmux/plugins/tpm/bin/install_plugins" ]; then
+    bash "$HOME/.tmux/plugins/tpm/bin/install_plugins" || true
+else
+    echo "⚠️  TPM not found, skipping plugin installation."
+fi
 
 echo "✅ ALL DONE! Run: source ~/.zshrc"
