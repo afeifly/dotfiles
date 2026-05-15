@@ -22,7 +22,8 @@ if [[ "$OS_TYPE" == "Linux" ]]; then
     if ! command -v nvim &> /dev/null || [[ "$(nvim --version | head -n1 | grep -oE '[0-9]+\.[0-9]+' | head -n1)" < "0.9" ]]; then
         echo "💾 Downloading Neovim AppImage (stable)..."
         mkdir -p "$HOME/.local/bin"
-        wget -q https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage -O "$HOME/.local/bin/nvim"
+        # Using curl with progress bar and following redirects
+        curl -L --fail --progress-bar "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage" -o "$HOME/.local/bin/nvim"
         chmod +x "$HOME/.local/bin/nvim"
         export PATH="$HOME/.local/bin:$PATH"
     fi
@@ -50,10 +51,24 @@ if [[ "$OS_TYPE" == "Linux" ]]; then
     if ! command -v timer &> /dev/null; then
         echo "⏳ Installing timer (CLI)..."
         TIMER_VERSION="1.4.6"
-        curl -sL "https://github.com/caarlos0/timer/releases/download/v${TIMER_VERSION}/timer_${TIMER_VERSION}_linux_amd64.tar.gz" | tar xz -C /tmp
-        mkdir -p "$HOME/.local/bin"
-        mv /tmp/timer "$HOME/.local/bin/timer"
-        chmod +x "$HOME/.local/bin/timer"
+        ARCH=$(uname -m)
+        case "$ARCH" in
+            x86_64)  TIMER_ARCH="amd64" ;;
+            aarch64) TIMER_ARCH="arm64" ;;
+            *)       TIMER_ARCH="amd64" ;; # Default to amd64
+        esac
+        
+        # Download to a temporary file first to avoid corrupted pipe
+        TIMER_URL="https://github.com/caarlos0/timer/releases/download/v${TIMER_VERSION}/timer_${TIMER_VERSION}_linux_${TIMER_ARCH}.tar.gz"
+        if curl -L --fail --progress-bar "$TIMER_URL" -o "/tmp/timer.tar.gz"; then
+            tar -xzf "/tmp/timer.tar.gz" -C /tmp
+            mkdir -p "$HOME/.local/bin"
+            mv /tmp/timer "$HOME/.local/bin/timer"
+            chmod +x "$HOME/.local/bin/timer"
+            rm /tmp/timer.tar.gz
+        else
+            echo "❌ Failed to download timer. Please install manually from https://github.com/caarlos0/timer"
+        fi
     fi
 fi
 
