@@ -45,6 +45,13 @@ export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform
 alias cl="clear"
 alias lvim="NVIM_APPNAME=lazyvim nvim"
 alias python='python3'
+work() {
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    timer "${1:-25m}" && osascript -e "display notification \"Pomodoro\" with title \"Work Timer Up!\" sound name \"Crystal\""
+  else
+    timer "${1:-25m}" && notify-send "Work Timer Up!" "Pomodoro"
+  fi
+}
 
 # Cross-platform 'code' command
 if [[ "$OSTYPE" == "darwin"* ]]; then

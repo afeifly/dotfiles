@@ -16,7 +16,7 @@ if [[ "$OS_TYPE" == "Linux" ]]; then
     [ "$EUID" -ne 0 ] && SUDO="sudo"
     
     $SUDO apt-get update
-    $SUDO apt-get install -y git stow tmux ripgrep bat fzf zsh curl wget
+    $SUDO apt-get install -y git stow tmux ripgrep bat fzf zsh curl wget libnotify-bin
 
     # Fix: Use AppImage for Neovim to guarantee version >= 0.10
     if ! command -v nvim &> /dev/null || [[ "$(nvim --version | head -n1 | grep -oE '[0-9]+\.[0-9]+' | head -n1)" < "0.9" ]]; then
@@ -40,10 +40,24 @@ elif [[ "$OS_TYPE" == "Darwin" ]]; then
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         eval "$(/opt/homebrew/bin/brew shellenv)"
     fi
-    brew install git stow neovim tmux ripgrep bat fzf zsh
+    # Install core tools + dependencies for 'work' function
+    brew install git stow neovim tmux ripgrep bat fzf zsh terminal-notifier caarlos0/tap/timer
 fi
 
-# 3. Prepare Oh My Zsh and Plugins
+# 3. Additional CLI Tools (Cross-Platform)
+if [[ "$OS_TYPE" == "Linux" ]]; then
+    # Install 'timer' for Linux if not present
+    if ! command -v timer &> /dev/null; then
+        echo "⏳ Installing timer (CLI)..."
+        TIMER_VERSION="1.4.6"
+        curl -sL "https://github.com/caarlos0/timer/releases/download/v${TIMER_VERSION}/timer_${TIMER_VERSION}_linux_amd64.tar.gz" | tar xz -C /tmp
+        mkdir -p "$HOME/.local/bin"
+        mv /tmp/timer "$HOME/.local/bin/timer"
+        chmod +x "$HOME/.local/bin/timer"
+    fi
+fi
+
+# 4. Prepare Oh My Zsh and Plugins
 ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
     echo "🐚 Installing Oh My Zsh..."
@@ -66,21 +80,18 @@ fi
 echo "🔗 Linking dotfiles..."
 cd "$HOME/dotfiles"
 
-# Ensure target directories exist before stowing
-mkdir -p "$HOME/.config/nvim"
-mkdir -p "$HOME/.config/git"
+# Remove existing files/directories to avoid stow conflicts
+echo "  - Removing existing configs to avoid conflicts..."
+rm -rf "$HOME/.config/nvim"
+rm -rf "$HOME/.config/git"
+rm -f "$HOME/.zshrc" "$HOME/.zprofile" "$HOME/.fzf.zsh"
+rm -f "$HOME/.tmux.conf"
+rm -f "$HOME/.vimrc"
 
-# Backup existing files
-backup_if_exists() {
-    if [ -f "$HOME/$1" ] && [ ! -L "$HOME/$1" ]; then
-        mv "$HOME/$1" "$HOME/$1.bak"
-    fi
-}
-backup_if_exists ".zshrc"
-backup_if_exists ".tmux.conf"
-backup_if_exists ".vimrc"
+# Ensure parent directories exist
+mkdir -p "$HOME/.config"
 
-# Restow (D = delete old links, R = restow)
+# Restow (R = restow)
 stow -R zsh tmux vim nvim git
 
 # 6. Trigger Plugin Installations
