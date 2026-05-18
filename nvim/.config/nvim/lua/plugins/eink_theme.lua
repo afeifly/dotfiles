@@ -8,7 +8,7 @@ return {
   {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = "zenwritten",
+      colorscheme = vim.g.persisted_colorscheme or "zenwritten",
     },
   },
   {
@@ -17,8 +17,7 @@ return {
       light_variant = "zenwritten",
     },
     config = function()
-      vim.opt.background = "light"
-      vim.cmd("colorscheme zenwritten")
+      -- Hardcoded background and colorscheme removed to allow persistence
       
       -- E-ink 专用高亮覆盖
       -- 1. 彻底去掉当前行背景色
