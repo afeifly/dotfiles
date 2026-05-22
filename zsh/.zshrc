@@ -83,3 +83,6 @@ source $ZSH/oh-my-zsh.sh
 # 8. SDKMAN (Standard location)
 export SDKMAN_DIR="$HOME/.sdkman"
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+# Added by Antigravity IDE
+export PATH="/Users/ex/.antigravity-ide/antigravity-ide/bin:$PATH"
