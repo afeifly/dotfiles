@@ -55,11 +55,9 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 
 # Cross-platform 'code' command
+unalias code 2>/dev/null
 if [[ "$OSTYPE" == "darwin"* ]]; then
     code () { VSCODE_CWD="$PWD" open -n -b "com.microsoft.VSCode" --args $* ;}
-else
-    # On Linux, 'code' is usually already in the path
-    alias code="code" 
 fi
 
 # FZF Integration

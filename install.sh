@@ -47,6 +47,18 @@ elif [[ "$OS_TYPE" == "Darwin" ]]; then
 fi
 
 # 3. Additional CLI Tools (Cross-Platform)
+echo "🔍 Setting up latest fzf..."
+if [ ! -d "$HOME/.fzf" ]; then
+    git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf"
+    "$HOME/.fzf/install" --bin --no-update-rc
+else
+    cd "$HOME/.fzf" && git pull && "./install" --bin --no-update-rc
+    cd - > /dev/null
+fi
+# Ensure fzf binary is accessible
+mkdir -p "$HOME/.local/bin"
+ln -sf "$HOME/.fzf/bin/fzf" "$HOME/.local/bin/fzf"
+
 # 4. Prepare Oh My Zsh and Plugins
 ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
