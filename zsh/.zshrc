@@ -50,7 +50,7 @@ alias python='python3'
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
   work() {
-    timer "${1:-25m}" && terminal-notifier -message 'Pomodoro' -title 'Work Timer Up!' -sound Crystal
+    timer "${1:-25m}" && osascript -e 'display notification "Pomodoro" with title "Work Timer Up!" sound name "Glass"'
   }
 fi
 
@@ -81,6 +81,9 @@ source $ZSH/oh-my-zsh.sh
 # 8. SDKMAN (Standard location)
 export SDKMAN_DIR="$HOME/.sdkman"
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+# Added by Antigravity CLI installer
+export PATH="/Users/ex/.local/bin:$PATH"
 
 # Added by Antigravity IDE
 export PATH="/Users/ex/.antigravity-ide/antigravity-ide/bin:$PATH"
