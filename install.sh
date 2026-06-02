@@ -99,17 +99,20 @@ stow -R zsh tmux vim nvim git
 
 # Create symlinks for lazyvim appname support (config and data)
 ln -sf "$HOME/.config/nvim" "$HOME/.config/lazyvim"
-mkdir -p "$HOME/.local/share"
+
+# Ensure actual nvim directories exist before linking lazyvim to them
+mkdir -p "$HOME/.local/share/nvim"
+mkdir -p "$HOME/.local/state/nvim"
+mkdir -p "$HOME/.cache/nvim"
+
 # Link data directory so lazyvim finds the same plugins
 rm -rf "$HOME/.local/share/lazyvim"
 ln -sf "$HOME/.local/share/nvim" "$HOME/.local/share/lazyvim"
 
 # Link state and cache directories to avoid stale data bugs
-mkdir -p "$HOME/.local/state"
 rm -rf "$HOME/.local/state/lazyvim"
 ln -sf "$HOME/.local/state/nvim" "$HOME/.local/state/lazyvim"
 
-mkdir -p "$HOME/.cache"
 rm -rf "$HOME/.cache/lazyvim"
 ln -sf "$HOME/.cache/nvim" "$HOME/.cache/lazyvim"
 
