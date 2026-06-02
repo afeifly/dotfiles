@@ -105,8 +105,11 @@ rm -rf "$HOME/.local/share/lazyvim"
 ln -sf "$HOME/.local/share/nvim" "$HOME/.local/share/lazyvim"
 
 # Link state and cache directories to avoid stale data bugs
+mkdir -p "$HOME/.local/state"
 rm -rf "$HOME/.local/state/lazyvim"
 ln -sf "$HOME/.local/state/nvim" "$HOME/.local/state/lazyvim"
+
+mkdir -p "$HOME/.cache"
 rm -rf "$HOME/.cache/lazyvim"
 ln -sf "$HOME/.cache/nvim" "$HOME/.cache/lazyvim"
 
