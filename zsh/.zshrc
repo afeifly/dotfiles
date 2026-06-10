@@ -87,3 +87,12 @@ export PATH="/Users/ex/.local/bin:$PATH"
 
 # Added by Antigravity IDE
 export PATH="/Users/ex/.antigravity-ide/antigravity-ide/bin:$PATH"
+
+
+# Added by Antigravity CLI installer
+export PATH="/Users/ex/.local/bin:$PATH"
+
+# Load Ghostty terminal configurations on macOS
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    [[ -f ~/.zsh_ghostty ]] && source ~/.zsh_ghostty
+fi
