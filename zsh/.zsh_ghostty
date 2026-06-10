@@ -82,9 +82,8 @@ function y() {
 # ==============================================================================
 # zsh-autosuggestions | 自动建议
 # ==============================================================================
-# 根据历史命令在光标后显示灰色建议
-# 使用方法: 输入时自动出现灰色提示，按 → 或 Ctrl+F 接受
-# 注意: 依赖历史记录，上面的 HISTFILE 配置不能少
+# Customize suggestion color (fg=246 is a lighter, more visible gray)
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=246'
 source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 # ==============================================================================
