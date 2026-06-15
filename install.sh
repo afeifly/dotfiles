@@ -18,6 +18,10 @@ if [[ "$OS_TYPE" == "Linux" ]]; then
     $SUDO apt-get update
     $SUDO apt-get install -y git stow tmux ripgrep bat fzf zsh curl wget vim bc
 
+    # Try installing extra tools for shell integration on Linux
+    echo "📦 Attempting to install extra CLI tools on Linux..."
+    $SUDO apt-get install -y zoxide eza starship yazi || true
+
     # Fix: Use AppImage for Neovim to guarantee version >= 0.10
     if ! command -v nvim &> /dev/null || [[ "$(nvim --version | head -n1 | grep -oE '[0-9]+\.[0-9]+' | head -n1)" < "0.10" ]]; then
         echo "💾 Downloading Neovim AppImage (stable)..."
@@ -41,8 +45,10 @@ elif [[ "$OS_TYPE" == "Darwin" ]]; then
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         eval "$(/opt/homebrew/bin/brew shellenv)"
     fi
-    # Install core tools + dependencies for 'work' function
-    brew install git stow neovim vim tmux ripgrep bat fzf zsh terminal-notifier caarlos0/tap/timer
+    # Install core tools + dependencies (including ghostty and relative apps)
+    brew install git stow neovim vim tmux ripgrep bat fzf zsh terminal-notifier caarlos0/tap/timer \
+                 starship zoxide yazi eza zsh-autosuggestions zsh-syntax-highlighting zsh-completions
+    brew install --cask ghostty font-jetbrains-mono-nerd-font font-maple-mono-nf
     brew upgrade neovim vim || true
 fi
 
@@ -87,15 +93,21 @@ echo "  - Removing existing configs to avoid conflicts..."
 rm -rf "$HOME/.config/nvim"
 rm -rf "$HOME/.config/lazyvim"
 rm -rf "$HOME/.config/git"
+rm -rf "$HOME/.config/ghostty"
+rm -f "$HOME/.config/starship.toml"
 rm -f "$HOME/.zshrc" "$HOME/.zprofile" "$HOME/.fzf.zsh"
 rm -f "$HOME/.tmux.conf"
 rm -f "$HOME/.vimrc"
+rm -f "$HOME/.zsh_ghostty"
+
+# Clean up incorrect macOS Ghostty config file if it exists
+rm -f "$HOME/Library/Application Support/com.mitchellh.ghostty/config.ghostty"
 
 # Ensure parent directories exist
 mkdir -p "$HOME/.config"
 
 # Restow (R = restow)
-stow -R zsh tmux vim nvim git
+stow -R zsh tmux vim nvim git ghostty starship
 
 # Create symlinks for lazyvim appname support (config and data)
 ln -sf "$HOME/.config/nvim" "$HOME/.config/lazyvim"

@@ -25,12 +25,18 @@ setopt hist_ignore_space
 # 扩展 zsh 的 Tab 补全候选列表，支持更多命令的参数补全
 # 使用方法: 输入命令后按 Tab 键
 # 注意: fpath 必须在 compinit 之前，否则补全定义不会被扫描到
-fpath=(/opt/homebrew/share/zsh-completions $fpath)
+# 适配 Intel 芯片及 Apple Silicon 芯片 Mac，动态加载 zsh-completions
+if [ -d "$(brew --prefix)/share/zsh-completions" ]; then
+    fpath=("$(brew --prefix)/share/zsh-completions" $fpath)
+elif [ -d "$(brew --prefix zsh-completions)/share/zsh-completions" ]; then
+    fpath=("$(brew --prefix zsh-completions)/share/zsh-completions" $fpath)
+fi
+
 autoload -Uz compinit && compinit -u
 # Tab 补全时显示候选菜单，连续按 Tab 可用光标在列表中移动选择
 zstyle ':completion:*' menu select
-# 补全大小写不敏感，输入 cd dow 可以补出 Downloads
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+# 补全大小写不敏感，且支持子串模糊匹配（例如输入 cd wtu 可以补出 s4c_wtu）
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 
 # ==============================================================================
 # Starship | 终端提示符
@@ -84,14 +90,24 @@ function y() {
 # ==============================================================================
 # Customize suggestion color (fg=246 is a lighter, more visible gray)
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=246'
-source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+# 适配Intel芯片及系列芯片Mac，动态加载 zsh-autosuggestions
+if [ -f "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
+    source "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+elif [ -f "$(brew --prefix zsh-autosuggestions)/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
+    source "$(brew --prefix zsh-autosuggestions)/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+fi
 
 # ==============================================================================
 # zsh-syntax-highlighting | 语法高亮
 # ==============================================================================
 # 命令输入时实时着色：存在的命令绿色，不存在的红色，字符串高亮等
 # 注意: 官方要求必须是最后一个被 source 的插件，否则无法正确高亮其他插件的命令
-source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# 适配Intel芯片及系列芯片Mac，动态加载 zsh-syntax-highlighting
+if [ -f "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
+    source "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+elif [ -f "$(brew --prefix zsh-syntax-highlighting)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
+    source "$(brew --prefix zsh-syntax-highlighting)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+fi
 
 # ==============================================================================
 # 快捷键
