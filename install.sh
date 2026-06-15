@@ -48,7 +48,7 @@ elif [[ "$OS_TYPE" == "Darwin" ]]; then
     # Install core tools + dependencies (including ghostty and relative apps)
     brew install git stow neovim vim tmux ripgrep bat fzf zsh terminal-notifier caarlos0/tap/timer \
                  starship zoxide yazi eza zsh-autosuggestions zsh-syntax-highlighting zsh-completions
-    brew install --cask ghostty font-jetbrains-mono-nerd-font font-maple-mono-nf
+    brew install --cask ghostty hammerspoon font-jetbrains-mono-nerd-font font-maple-mono-nf
     brew upgrade neovim vim || true
 fi
 
@@ -99,15 +99,17 @@ rm -f "$HOME/.zshrc" "$HOME/.zprofile" "$HOME/.fzf.zsh"
 rm -f "$HOME/.tmux.conf"
 rm -f "$HOME/.vimrc"
 rm -f "$HOME/.zsh_ghostty"
+rm -f "$HOME/.hammerspoon/init.lua"
 
 # Clean up incorrect macOS Ghostty config file if it exists
 rm -f "$HOME/Library/Application Support/com.mitchellh.ghostty/config.ghostty"
 
 # Ensure parent directories exist
 mkdir -p "$HOME/.config"
+mkdir -p "$HOME/.hammerspoon"
 
 # Restow (R = restow)
-stow -R zsh tmux vim nvim git ghostty starship
+stow -R zsh tmux vim nvim git ghostty starship hammerspoon
 
 # Create symlinks for lazyvim appname support (config and data)
 ln -sf "$HOME/.config/nvim" "$HOME/.config/lazyvim"
