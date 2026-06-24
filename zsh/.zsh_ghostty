@@ -32,7 +32,7 @@ elif [ -d "$(brew --prefix zsh-completions)/share/zsh-completions" ]; then
     fpath=("$(brew --prefix zsh-completions)/share/zsh-completions" $fpath)
 fi
 
-autoload -Uz compinit && compinit -u
+autoload -Uz compinit && compinit -u -i
 # Tab 补全时显示候选菜单，连续按 Tab 可用光标在列表中移动选择
 zstyle ':completion:*' menu select
 # 补全大小写不敏感，且支持子串模糊匹配（例如输入 cd wtu 可以补出 s4c_wtu）
