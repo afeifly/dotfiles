@@ -1,4 +1,4 @@
-set clipboard=unnamed
+set clipboard=unnamed,unnamedplus
 
 " Map jk to Escape in insert mode
 inoremap jk <Esc>

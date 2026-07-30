@@ -18,3 +18,19 @@ vim.api.nvim_create_autocmd({ "ColorScheme", "OptionSet" }, {
     end
   end,
 })
+
+-- Save active Neovim server name to /tmp/nvim-current-server.pipe on focus and startup
+local nvim_server_group = vim.api.nvim_create_augroup("NvimServerTracker", { clear = true })
+vim.api.nvim_create_autocmd({ "VimEnter", "FocusGained", "WinEnter" }, {
+  group = nvim_server_group,
+  callback = function()
+    local server = vim.v.servername
+    if server and server ~= "" then
+      local f = io.open("/tmp/nvim-current-server.pipe", "w")
+      if f then
+        f:write(server)
+        f:close()
+      end
+    end
+  end,
+})

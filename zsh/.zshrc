@@ -96,3 +96,12 @@ export PATH="/Users/ex/.local/bin:$PATH"
 if [[ "$OSTYPE" == "darwin"* ]]; then
     [[ -f ~/.zsh_ghostty ]] && source ~/.zsh_ghostty
 fi
+
+# Added by Antigravity IDE
+export PATH="/Users/ex/.antigravity-ide/antigravity-ide/bin:$PATH"
+
+# Added by Antigravity IDE
+export PATH="/Users/ex/.antigravity-ide/antigravity-ide/bin:$PATH"
+
+# Added by Antigravity IDE
+export PATH="/Users/ex/.antigravity-ide/antigravity-ide/bin:$PATH"

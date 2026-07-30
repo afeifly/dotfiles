@@ -14,9 +14,9 @@ if [[ "$OS_TYPE" == "Linux" ]]; then
     echo "📦 Using apt-get to install packages..."
     SUDO=""
     [ "$EUID" -ne 0 ] && SUDO="sudo"
-    
+
     $SUDO apt-get update
-    $SUDO apt-get install -y git stow tmux ripgrep bat fzf zsh curl wget vim bc
+    $SUDO apt-get install -y git stow tmux ripgrep bat fzf zsh curl wget vim bc fd-find
 
     # Try installing extra tools for shell integration on Linux
     echo "📦 Attempting to install extra CLI tools on Linux..."
@@ -39,6 +39,27 @@ if [[ "$OS_TYPE" == "Linux" ]]; then
         ln -sf /usr/bin/batcat "$HOME/.local/bin/bat" || true
     fi
 
+    # Ubuntu specific: symlink 'fdfind' to 'fd'
+    if command -v fdfind &> /dev/null && ! command -v fd &> /dev/null; then
+        echo "🔗 Symlinking fdfind to fd..."
+        mkdir -p "$HOME/.local/bin"
+        ln -sf /usr/bin/fdfind "$HOME/.local/bin/fd" || true
+    fi
+
+    # Install lazygit on Linux if not present
+    if ! command -v lazygit &> /dev/null; then
+        echo "💾 Downloading Lazygit (stable)..."
+        mkdir -p "$HOME/.local/bin"
+        LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+        if [ -z "$LAZYGIT_VERSION" ]; then
+            LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+        fi
+        curl -L "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" -o lazygit.tar.gz
+        tar xf lazygit.tar.gz lazygit
+        mv lazygit "$HOME/.local/bin/lazygit"
+        rm lazygit.tar.gz
+    fi
+
 elif [[ "$OS_TYPE" == "Darwin" ]]; then
     echo "📦 Using Homebrew to install packages..."
     if ! command -v brew &> /dev/null; then
@@ -47,7 +68,7 @@ elif [[ "$OS_TYPE" == "Darwin" ]]; then
     fi
     # Install core tools + dependencies (including ghostty and relative apps)
     brew install git stow neovim vim tmux ripgrep bat fzf zsh terminal-notifier caarlos0/tap/timer \
-                 starship zoxide yazi eza zsh-autosuggestions zsh-syntax-highlighting zsh-completions
+                 starship zoxide yazi eza zsh-autosuggestions zsh-syntax-highlighting zsh-completions lazygit fd
     brew install --cask ghostty hammerspoon font-jetbrains-mono-nerd-font font-maple-mono-nf
     brew upgrade neovim vim || true
 fi
@@ -94,6 +115,7 @@ rm -rf "$HOME/.config/nvim"
 rm -rf "$HOME/.config/lazyvim"
 rm -rf "$HOME/.config/git"
 rm -rf "$HOME/.config/ghostty"
+rm -rf "$HOME/.config/yazi"
 rm -f "$HOME/.config/starship.toml"
 rm -f "$HOME/.zshrc" "$HOME/.zprofile" "$HOME/.fzf.zsh"
 rm -f "$HOME/.tmux.conf"
@@ -109,7 +131,7 @@ mkdir -p "$HOME/.config"
 mkdir -p "$HOME/.hammerspoon"
 
 # Restow (R = restow)
-stow -R zsh tmux vim nvim git ghostty starship hammerspoon
+stow -R zsh tmux vim nvim git ghostty starship hammerspoon yazi
 
 # Create symlinks for lazyvim appname support (config and data)
 ln -sf "$HOME/.config/nvim" "$HOME/.config/lazyvim"
@@ -157,5 +179,35 @@ if [ -f "$HOME/.tmux/plugins/tpm/bin/install_plugins" ]; then
 else
     echo "⚠️  TPM not found, skipping plugin installation."
 fi
+
+# 7. Configure IDEs (VS Code, Cursor, Antigravity IDE) to use system clipboard in Vim mode
+echo "⚙️ Configuring IDE Vim modes to use system clipboard..."
+for settings_dir in \
+    "$HOME/Library/Application Support/Code/User" \
+    "$HOME/Library/Application Support/Cursor/User" \
+    "$HOME/Library/Application Support/Antigravity IDE/User" \
+    "$HOME/.config/Code/User" \
+    "$HOME/.config/Cursor/User" \
+    "$HOME/.config/Antigravity IDE/User"; do
+    if [ -d "$settings_dir" ]; then
+        settings_file="$settings_dir/settings.json"
+        if [ ! -f "$settings_file" ]; then
+            echo "{}" > "$settings_file"
+        fi
+        echo "  - Configuring $settings_file..."
+        python3 -c "
+import json
+path = '$settings_file'
+try:
+    with open(path, 'r') as f:
+        data = json.load(f)
+except Exception:
+    data = {}
+data['vim.useSystemClipboard'] = True
+with open(path, 'w') as f:
+    json.dump(data, f, indent=4)
+" || true
+    fi
+done
 
 echo "✅ ALL DONE! Run: source ~/.zshrc"
