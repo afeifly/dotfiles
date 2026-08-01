@@ -105,3 +105,7 @@ export PATH="/Users/ex/.antigravity-ide/antigravity-ide/bin:$PATH"
 
 # Added by Antigravity IDE
 export PATH="/Users/ex/.antigravity-ide/antigravity-ide/bin:$PATH"
+
+export ANTHROPIC_BASE_URL="https://ai.exmm.top/antigravity"
+export ANTHROPIC_AUTH_TOKEN="sk-d99585cd752326928146fea4cf8f57a679598b29c116f034802d03c4ef115ef7"
+export ANTHROPIC_MODEL="gemini-3.5-flash[1M]"
