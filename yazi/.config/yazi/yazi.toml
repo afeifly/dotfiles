@@ -1,4 +1,0 @@
-[opener]
-edit = [
-    { run = 'sh ~/.config/yazi/nvim-remote.sh "$@"', block = true, for = "unix" }
-]
