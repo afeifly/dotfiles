@@ -63,8 +63,18 @@ if [[ "$OS_TYPE" == "Linux" ]]; then
 elif [[ "$OS_TYPE" == "Darwin" ]]; then
     echo "📦 Using Homebrew to install packages..."
     if ! command -v brew &> /dev/null; then
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        eval "$(/opt/homebrew/bin/brew shellenv)"
+        if [[ -f "/opt/homebrew/bin/brew" ]]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+        elif [[ -f "/usr/local/bin/brew" ]]; then
+            eval "$(/usr/local/bin/brew shellenv)"
+        else
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            if [[ -f "/opt/homebrew/bin/brew" ]]; then
+                eval "$(/opt/homebrew/bin/brew shellenv)"
+            elif [[ -f "/usr/local/bin/brew" ]]; then
+                eval "$(/usr/local/bin/brew shellenv)"
+            fi
+        fi
     fi
     # Install core tools + dependencies (including ghostty and relative apps)
     brew install git stow neovim vim tmux ripgrep bat fzf zsh terminal-notifier caarlos0/tap/timer \
@@ -107,7 +117,8 @@ fi
 
 # 5. Use Stow to Symlink Configs
 echo "🔗 Linking dotfiles..."
-cd "$HOME/dotfiles"
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$DOTFILES_DIR"
 
 # Remove existing files/directories to avoid stow conflicts
 echo "  - Removing existing configs to avoid conflicts..."
@@ -130,8 +141,14 @@ rm -f "$HOME/Library/Application Support/com.mitchellh.ghostty/config.ghostty"
 mkdir -p "$HOME/.config"
 mkdir -p "$HOME/.hammerspoon"
 
-# Restow (R = restow)
-stow -R zsh tmux vim nvim git ghostty starship hammerspoon yazi
+# Restow packages (stow each package safely)
+PACKAGES=(zsh tmux vim nvim git ghostty starship hammerspoon)
+for pkg in "${PACKAGES[@]}"; do
+    if [ -d "$DOTFILES_DIR/$pkg" ]; then
+        echo "  - Stowing $pkg..."
+        stow -d "$DOTFILES_DIR" -t "$HOME" -R "$pkg"
+    fi
+done
 
 # Create symlinks for lazyvim appname support (config and data)
 ln -sf "$HOME/.config/nvim" "$HOME/.config/lazyvim"

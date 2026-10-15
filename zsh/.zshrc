@@ -9,6 +9,8 @@ export ZSH="$HOME/.oh-my-zsh"
 # 1. Detect Homebrew Path (Mac vs Linux)
 if [[ -d "/opt/homebrew/bin" ]]; then
     BREW_PREFIX="/opt/homebrew"
+elif [[ -d "/usr/local/bin" && -x "/usr/local/bin/brew" ]]; then
+    BREW_PREFIX="/usr/local"
 elif [[ -d "/home/linuxbrew/.linuxbrew/bin" ]]; then
     BREW_PREFIX="/home/linuxbrew/.linuxbrew"
 fi
@@ -82,30 +84,21 @@ source $ZSH/oh-my-zsh.sh
 export SDKMAN_DIR="$HOME/.sdkman"
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 
-# Added by Antigravity CLI installer
-export PATH="/Users/ex/.local/bin:$PATH"
-
-# Added by Antigravity IDE
-export PATH="/Users/ex/.antigravity-ide/antigravity-ide/bin:$PATH"
-
-
-# Added by Antigravity CLI installer
-export PATH="/Users/ex/.local/bin:$PATH"
-
 # Load Ghostty terminal configurations on macOS
 if [[ "$OSTYPE" == "darwin"* ]]; then
     [[ -f ~/.zsh_ghostty ]] && source ~/.zsh_ghostty
 fi
 
-# Added by Antigravity IDE
-export PATH="/Users/ex/.antigravity-ide/antigravity-ide/bin:$PATH"
-
-# Added by Antigravity IDE
-export PATH="/Users/ex/.antigravity-ide/antigravity-ide/bin:$PATH"
-
-# Added by Antigravity IDE
-export PATH="/Users/ex/.antigravity-ide/antigravity-ide/bin:$PATH"
+# Antigravity & OpenCode CLI tools
+export PATH="$HOME/.antigravity-ide/antigravity-ide/bin:$PATH"
+export PATH="$HOME/.ocv/bin:$PATH"
+export PATH="$HOME/.opencode/bin:$PATH"
 
 export ANTHROPIC_BASE_URL="https://ai.exmm.top/antigravity"
 export ANTHROPIC_AUTH_TOKEN="sk-d99585cd752326928146fea4cf8f57a679598b29c116f034802d03c4ef115ef7"
 export ANTHROPIC_MODEL="gemini-3.5-flash[1M]"
+
+alias docker="container"
+
+
+

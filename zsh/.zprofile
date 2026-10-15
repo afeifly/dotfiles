@@ -1,8 +1,7 @@
+if [[ -f "/opt/homebrew/bin/brew" ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -f "/usr/local/bin/brew" ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+fi
 
-eval "$(/opt/homebrew/bin/brew shellenv)"
-
-eval "$(/opt/homebrew/bin/brew shellenv)"
-
-
-# Added by Antigravity CLI installer
-export PATH="/Users/ex/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
