@@ -26,18 +26,31 @@ export PATH="$HOME/fvm/default/bin:$PATH"
 export PATH="$HOME/.antigravity/antigravity/bin:$PATH"
 
 # 3. NVM Configuration (Cross-Platform)
+# Load the REAL nvm.sh with --no-use. Two traps otherwise:
+#   - Homebrew's wrapper (/opt/homebrew/opt/nvm/nvm.sh) does not forward "$@",
+#     so --no-use would be silently dropped.
+#   - Without --no-use, nvm_auto resolves the default alias on every shell
+#     start and costs ~0.7s. It is a no-op here anyway: the default alias is
+#     the bare word "node" (not a version), so nvm never activates a version
+#     and `nvm current` stays "system".
 export NVM_DIR="$HOME/.nvm"
-# Check common nvm locations
 NVM_SCRIPT=""
-if [[ -s "$BREW_PREFIX/opt/nvm/nvm.sh" ]]; then
-    NVM_SCRIPT="$BREW_PREFIX/opt/nvm/nvm.sh"
-    NVM_COMPLETION="$BREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm"
+if [[ -n "$BREW_PREFIX" && -s "$BREW_PREFIX/opt/nvm/libexec/nvm.sh" ]]; then
+    NVM_SCRIPT="$BREW_PREFIX/opt/nvm/libexec/nvm.sh"
 elif [[ -s "$HOME/.nvm/nvm.sh" ]]; then
     NVM_SCRIPT="$HOME/.nvm/nvm.sh"
+elif [[ -n "$BREW_PREFIX" && -s "$BREW_PREFIX/opt/nvm/nvm.sh" ]]; then
+    NVM_SCRIPT="$BREW_PREFIX/opt/nvm/nvm.sh"   # wrapper: cannot pass --no-use
 fi
 
-[[ -n "$NVM_SCRIPT" ]] && \. "$NVM_SCRIPT"
-[[ -s "$NVM_COMPLETION" ]] && \. "$NVM_COMPLETION"
+[[ -n "$NVM_SCRIPT" ]] && \. "$NVM_SCRIPT" --no-use
+
+# Completion is deferred until after oh-my-zsh (see step 7). nvm's completion
+# script re-runs compinit itself if compinit is not yet loaded, which would add
+# a third full compinit pass (~0.4s) to every shell start.
+NVM_COMPLETION=""
+[[ -n "$BREW_PREFIX" && -s "$BREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm" ]] && \
+    NVM_COMPLETION="$BREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm"
 
 # 4. Android SDK
 export ANDROID_HOME="$BREW_PREFIX/share/android-commandlinetools"
@@ -63,7 +76,9 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 
 # FZF Integration
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+# NOTE: sourced AFTER oh-my-zsh below — oh-my-zsh's lib/key-bindings.zsh binds
+# '^r' to history-incremental-search-backward, and '^r'/'^R' are the same key
+# (0x12), so loading fzf before it would leave Ctrl+R broken.
 export FZF_DEFAULT_OPTS="--preview '(bat --style=numbers --color=always --line-range :500 {} || tree -C {}) 2> /dev/null'"
 
 fif() {
@@ -77,8 +92,31 @@ fif() {
 # 7. ZSH Theme & Plugins
 ZSH_THEME="ys"
 
-plugins=(git wd docker docker-compose zsh-autosuggestions zsh-syntax-highlighting zsh-vi-mode)
+# zsh-completions must be on fpath BEFORE oh-my-zsh runs compinit, otherwise
+# its ~180 completion functions are never scanned. Moved here from
+# ~/.zsh_ghostty so compinit only has to run once instead of three times.
+# ($BREW_PREFIX is already resolved above; avoids ~5 `brew --prefix` subprocesses.)
+if [[ -n "$BREW_PREFIX" && -d "$BREW_PREFIX/share/zsh-completions" ]]; then
+    fpath=("$BREW_PREFIX/share/zsh-completions" $fpath)
+fi
+
+# zsh-autosuggestions / zsh-syntax-highlighting are loaded from Homebrew inside
+# ~/.zsh_ghostty (after every other plugin, which zsh-syntax-highlighting
+# requires). Only hand them to oh-my-zsh when that file will not run.
+if [[ "$OSTYPE" == "darwin"* && -f "$HOME/.zsh_ghostty" ]]; then
+    plugins=(git wd docker docker-compose zsh-vi-mode)
+else
+    plugins=(git wd docker docker-compose zsh-autosuggestions zsh-syntax-highlighting zsh-vi-mode)
+fi
 source $ZSH/oh-my-zsh.sh
+
+# fzf keybindings/complete — must follow oh-my-zsh so Ctrl+R stays fzf's
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+# nvm's completion script re-runs compinit itself when compinit is not yet
+# loaded, adding a third full pass (~0.4s). After oh-my-zsh, compinit already
+# exists, so it skips straight to bashcompinit.
+[[ -s "$NVM_COMPLETION" ]] && \. "$NVM_COMPLETION"
 
 # 8. SDKMAN (Standard location)
 export SDKMAN_DIR="$HOME/.sdkman"

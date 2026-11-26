@@ -24,15 +24,9 @@ setopt hist_ignore_space
 # ==============================================================================
 # 扩展 zsh 的 Tab 补全候选列表，支持更多命令的参数补全
 # 使用方法: 输入命令后按 Tab 键
-# 注意: fpath 必须在 compinit 之前，否则补全定义不会被扫描到
-# 适配 Intel 芯片及 Apple Silicon 芯片 Mac，动态加载 zsh-completions
-if [ -d "$(brew --prefix)/share/zsh-completions" ]; then
-    fpath=("$(brew --prefix)/share/zsh-completions" $fpath)
-elif [ -d "$(brew --prefix zsh-completions)/share/zsh-completions" ]; then
-    fpath=("$(brew --prefix zsh-completions)/share/zsh-completions" $fpath)
-fi
-
-autoload -Uz compinit && compinit -u -i
+# 注意: fpath 必须在 compinit 之前，否则补全定义不会被扫描到。
+#       已上移到 ~/.zshrc 的 oh-my-zsh 之前（fpath 与 compinit 都只处理一次），
+#       此处不再重复设置 fpath，也不再重复运行 compinit。
 # Tab 补全时显示候选菜单，连续按 Tab 可用光标在列表中移动选择
 zstyle ':completion:*' menu select
 # 补全大小写不敏感，且支持子串模糊匹配（例如输入 cd wtu 可以补出 s4c_wtu）
@@ -54,7 +48,8 @@ eval "$(starship init zsh)"
 #   Ctrl+R  模糊搜索历史命令
 #   Ctrl+T  模糊搜索当前目录下的文件
 #   命令 **<Tab>  触发 fzf 补全，如: cd **<Tab>、kill **<Tab>
-source <(fzf --zsh)
+# 注: fzf 的键位绑定已由 ~/.zshrc 中的 ~/.fzf.zsh 注册（含旧版回退逻辑），
+#     此处不再重复 source，避免每次启动多跑两遍 `fzf --zsh`。
 
 # ==============================================================================
 # zoxide | 智能目录跳转
@@ -91,10 +86,11 @@ function y() {
 # Customize suggestion color (fg=246 is a lighter, more visible gray)
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=246'
 # 适配Intel芯片及系列芯片Mac，动态加载 zsh-autosuggestions
-if [ -f "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
-    source "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
-elif [ -f "$(brew --prefix zsh-autosuggestions)/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
-    source "$(brew --prefix zsh-autosuggestions)/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+# 用 $BREW_PREFIX 代替 $(brew --prefix)：后者每次都是一个 ~26ms 的子进程
+if [ -f "$BREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
+    source "$BREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+elif [ -f "$BREW_PREFIX/opt/zsh-autosuggestions/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
+    source "$BREW_PREFIX/opt/zsh-autosuggestions/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
 fi
 
 # ==============================================================================
@@ -103,10 +99,11 @@ fi
 # 命令输入时实时着色：存在的命令绿色，不存在的红色，字符串高亮等
 # 注意: 官方要求必须是最后一个被 source 的插件，否则无法正确高亮其他插件的命令
 # 适配Intel芯片及系列芯片Mac，动态加载 zsh-syntax-highlighting
-if [ -f "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
-    source "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
-elif [ -f "$(brew --prefix zsh-syntax-highlighting)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
-    source "$(brew --prefix zsh-syntax-highlighting)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+# 用 $BREW_PREFIX 代替 $(brew --prefix)：后者每次都是一个 ~26ms 的子进程
+if [ -f "$BREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
+    source "$BREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+elif [ -f "$BREW_PREFIX/opt/zsh-syntax-highlighting/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
+    source "$BREW_PREFIX/opt/zsh-syntax-highlighting/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 fi
 
 # ==============================================================================
